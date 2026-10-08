@@ -1,0 +1,8 @@
+langchain==1.0.2
+langgraph==1.0.5
+ipykernel
+python-dotenv
+langchain-tavily
+langgraph-checkpoint-sqlite
+streamlit
+langchain_anthropic
