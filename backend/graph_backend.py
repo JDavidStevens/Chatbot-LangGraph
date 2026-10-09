@@ -80,8 +80,6 @@ graph_builder.add_conditional_edges(
 
 graph_builder.add_edge("tool_node", "chatbot")
 
-graph = graph_builder.compile()
-
 #SQLiteSaver Checkpointer
 connection = sqlite3.connect("chatbot.squlite", check_same_thread=False)
 checkpointer = SqliteSaver(connection)

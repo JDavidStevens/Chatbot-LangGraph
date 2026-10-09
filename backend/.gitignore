@@ -17,6 +17,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Local SQLite checkpoint databases (including WAL/SHM sidecars)
+*.sqlite*
+*.squlite*
+
 # Local editor and operating system files
 .vscode/
 .idea/
