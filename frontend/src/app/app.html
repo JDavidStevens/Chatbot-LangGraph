@@ -1,4 +1,31 @@
-<h1>Hi, what can I help you with?</h1>
-<input [(ngModel)]="message" (keyup.enter)="submit()" />
-<button (click)="submit()">Send</button>
-<p>{{ reply() }}</p>
+<main class="chat">
+  <div class="messages" #scroller (scroll)="onScroll(scroller)">
+    <div class="thread">
+      @if (messages().length === 0) {
+        <h1 class="greeting">Hi, what can I help you with?</h1>
+      }
+
+      @for (msg of messages(); track $index) {
+        <div class="message" [class.user]="msg.role === 'user'">
+          @if (msg.content) {
+            <div class="content">{{ msg.content }}</div>
+          } @else {
+            <div class="typing" aria-label="Assistant is typing">
+              <span></span><span></span><span></span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <form class="composer" (submit)="submit(); $event.preventDefault()">
+    <input
+      name="message"
+      placeholder="Message the assistant"
+      autocomplete="off"
+      [(ngModel)]="message"
+    />
+    <button type="submit" aria-label="Send" [disabled]="!message.trim()">&#8593;</button>
+  </form>
+</main>

@@ -39,8 +39,23 @@ describe('App', () => {
       chunks.next('there');
 
       expect(streamChat).toHaveBeenCalledWith('hello', expect.any(String));
-      expect(app.reply()).toBe('hi there');
+      expect(app.messages()).toEqual([
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', content: 'hi there' },
+      ]);
       expect(app.message).toBe('');
+    });
+
+    it('should ignore blank messages', () => {
+      const streamChat = vi.fn();
+      TestBed.overrideProvider(ChatService, { useValue: { streamChat } });
+
+      const app = TestBed.createComponent(App).componentInstance as any;
+      app.message = '   ';
+      app.submit();
+
+      expect(streamChat).not.toHaveBeenCalled();
+      expect(app.messages()).toEqual([]);
     });
 
     it('should unsubscribe from the previous stream on a new submit', () => {
@@ -50,27 +65,30 @@ describe('App', () => {
       TestBed.overrideProvider(ChatService, { useValue: { streamChat } });
 
       const app = TestBed.createComponent(App).componentInstance as any;
+      app.message = 'one';
       app.submit();
+      app.message = 'two';
       app.submit();
 
       expect(first.observed).toBe(false);
       expect(second.observed).toBe(true);
     });
 
-    it('should clear the previous reply on a new submit', () => {
+    it('should keep earlier messages when a new one is submitted', () => {
       const first = new Subject<string>();
       const second = new Subject<string>();
       const streamChat = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
       TestBed.overrideProvider(ChatService, { useValue: { streamChat } });
 
       const app = TestBed.createComponent(App).componentInstance as any;
+      app.message = 'one';
       app.submit();
       first.next('old');
+      app.message = 'two';
       app.submit();
-
-      expect(app.reply()).toBe('');
       second.next('new');
-      expect(app.reply()).toBe('new');
+
+      expect(app.messages().map((m: any) => m.content)).toEqual(['one', 'old', 'two', 'new']);
     });
 
     it('should keep working after a stream errors', () => {
@@ -81,12 +99,16 @@ describe('App', () => {
       TestBed.overrideProvider(ChatService, { useValue: { streamChat } });
 
       const app = TestBed.createComponent(App).componentInstance as any;
+      app.message = 'one';
       app.submit();
       first.error(new Error('boom'));
+      expect(app.messages().at(-1).content).toContain('Something went wrong');
+
+      app.message = 'two';
       app.submit();
       second.next('recovered');
 
-      expect(app.reply()).toBe('recovered');
+      expect(app.messages().at(-1).content).toBe('recovered');
     });
 
     it('should cancel the stream when the component is destroyed', () => {
@@ -95,6 +117,7 @@ describe('App', () => {
       TestBed.overrideProvider(ChatService, { useValue: { streamChat } });
 
       const fixture = TestBed.createComponent(App);
+      (fixture.componentInstance as any).message = 'hello';
       (fixture.componentInstance as any).submit();
       expect(chunks.observed).toBe(true);
 
